@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0d1a0d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>HydroCalc NFT</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg-deep:#0d1a0d;--bg-card:#162416;--bg-card-alt:#1c2e1c;--bg-input:#0a150a;--border-subtle:#2a4a2a;--border-glow:#3d8b3d;--accent:#5ce65c;--accent-dim:#3da63d;--accent-bright:#7fff7f;--text-primary:#e8f5e8;--text-secondary:#8aab8a;--text-muted:#5a7a5a;--water-blue:#4a9eff;--calcium-gold:#f0c050;--mg-teal:#40d6b0;--npk-coral:#ff7a6b;--danger:#ff5555;--warning:#f0c050;--positive:#5ce65c;--negative:#ff7a6b}
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%;overflow-x:hidden}
+  body{font-family:'DM Sans',sans-serif;background:var(--bg-deep);color:var(--text-primary);min-height:100vh;min-height:100dvh}
+  body::before{content:'';position:fixed;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(ellipse at 20% 20%,rgba(92,230,92,.04) 0%,transparent 50%),radial-gradient(ellipse at 80% 80%,rgba(64,214,176,.03) 0%,transparent 50%),radial-gradient(ellipse at 50% 50%,rgba(74,158,255,.02) 0%,transparent 60%);pointer-events:none;z-index:0}
+  .app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 20px 60px}
+  .header{padding:40px 0 24px;text-align:center;animation:fadeDown .8s ease-out}
+  .header-icon{font-size:36px;display:block;margin-bottom:8px;filter:drop-shadow(0 0 20px rgba(92,230,92,.3))}
+  .header h1{font-family:'DM Serif Display',serif;font-size:26px;font-weight:400;letter-spacing:-.5px;margin-bottom:4px}
+  .header p{font-size:11px;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;font-weight:500}
+  .stepper{display:flex;align-items:center;justify-content:center;margin-bottom:22px;padding:0 6px;animation:fadeDown .6s ease-out .1s both}
+  .step-dot{width:30px;height:30px;border-radius:50%;background:var(--bg-input);border:2px solid var(--border-subtle);display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--text-muted);transition:all .4s ease;flex-shrink:0}
+  .step-dot.active{border-color:var(--accent);color:var(--accent);background:rgba(92,230,92,.08);box-shadow:0 0 12px rgba(92,230,92,.15)}
+  .step-dot.done{border-color:var(--accent-dim);background:var(--accent-dim);color:#0d1a0d}
+  .step-line{flex:1;height:2px;background:var(--border-subtle);transition:background .4s ease;max-width:32px}
+  .step-line.done{background:var(--accent-dim)}
+  .card{background:var(--bg-card);border:1px solid var(--border-subtle);border-radius:16px;padding:22px;margin-bottom:14px;position:relative;overflow:hidden}
+  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--border-glow),transparent);opacity:.4}
+  .card-title{font-family:'DM Serif Display',serif;font-size:17px;margin-bottom:18px;display:flex;align-items:center;gap:10px}
+  .step-panel{display:none;animation:fadeUp .5s ease-out}.step-panel.active{display:block}
+  .input-group{margin-bottom:18px}
+  .input-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--text-secondary);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block}
+  .dot-water{background:var(--water-blue);box-shadow:0 0 8px rgba(74,158,255,.4)}
+  .dot-target{background:var(--accent);box-shadow:0 0 8px rgba(92,230,92,.4)}
+  .dot-mg{background:var(--mg-teal);box-shadow:0 0 8px rgba(64,214,176,.4)}
+  .dot-ca{background:var(--calcium-gold);box-shadow:0 0 8px rgba(240,192,80,.4)}
+  .dot-npk{background:var(--npk-coral);box-shadow:0 0 8px rgba(255,122,107,.4)}
+  .dot-vol{background:#a78bfa;box-shadow:0 0 8px rgba(167,139,250,.4)}
+  .input-wrapper{position:relative}
+  .input-wrapper input{width:100%;background:var(--bg-input);border:1.5px solid var(--border-subtle);border-radius:12px;padding:14px 70px 14px 16px;font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:500;color:var(--text-primary);outline:none;transition:all .3s ease;-webkit-appearance:none;appearance:none}
+  .input-wrapper input::placeholder{color:var(--text-muted);font-size:15px}
+  .input-wrapper input:focus{border-color:var(--accent-dim);box-shadow:0 0 0 3px rgba(92,230,92,.1)}
+  .input-unit{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--text-muted);letter-spacing:1px;pointer-events:none}
+  .stage-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+  .stage-btn{background:var(--bg-input);border:2px solid var(--border-subtle);border-radius:12px;padding:14px 12px;cursor:pointer;transition:all .3s ease;text-align:center}
+  .stage-btn:hover{border-color:var(--accent-dim)}
+  .stage-btn.selected{border-color:var(--accent);background:rgba(92,230,92,.06);box-shadow:0 0 12px rgba(92,230,92,.1)}
+  .stage-name{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:4px}
+  .stage-week{font-size:11px;color:var(--text-muted);margin-bottom:6px}
+  .stage-ppm{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:var(--accent)}
+  .stage-note{font-size:10px;color:var(--text-muted);margin-top:4px;line-height:1.3}
+  .breakdown{background:var(--bg-card-alt);border:1px solid var(--border-subtle);border-radius:10px;padding:14px;margin-bottom:18px}
+  .breakdown-title{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+  .breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:13px}
+  .breakdown-row .bl{color:var(--text-secondary)}.breakdown-row .bv{font-family:'JetBrains Mono',monospace;font-weight:600}
+  .instruction{background:var(--bg-card-alt);border:1px solid var(--border-subtle);border-radius:10px;padding:16px;margin-bottom:18px}
+  .inst-title{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .inst-body{font-size:13px;color:var(--text-secondary);line-height:1.6}
+  .inst-highlight{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:22px;display:block;margin-top:8px}
+  .hl-mg{color:var(--mg-teal)}.hl-ca{color:var(--calcium-gold)}.hl-npk{color:var(--npk-coral)}
+  .expected-box{background:var(--bg-input);border:1px dashed var(--border-subtle);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center}
+  .expected-box strong{font-family:'JetBrains Mono',monospace;font-size:14px}
+  .ratio-note{font-size:11px;color:var(--text-muted);text-align:center;margin-bottom:14px;padding:8px;background:var(--bg-input);border-radius:8px;border:1px solid var(--border-subtle)}
+  .ratio-note strong{color:var(--text-secondary)}
+
+  /* Shortfall correction box */
+  .shortfall-box{display:none;background:rgba(240,192,80,.08);border:1.5px solid rgba(240,192,80,.3);border-radius:12px;padding:16px;margin-bottom:18px;animation:fadeUp .4s ease-out}
+  .shortfall-box.visible{display:block}
+  .shortfall-header{font-size:13px;font-weight:700;color:var(--warning);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .shortfall-body{font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:12px}
+  .shortfall-amount{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:24px;color:var(--warning);display:block;margin:8px 0}
+  .shortfall-detail{font-size:11px;color:var(--text-muted);line-height:1.5;margin-bottom:14px;padding:8px;background:var(--bg-input);border-radius:6px}
+  .shortfall-input{margin-bottom:12px}
+
+  .variance-box{display:none;border-radius:10px;padding:12px 16px;margin-bottom:18px;font-size:13px}
+  .variance-box.visible{display:flex;align-items:center;gap:10px}
+  .variance-box.pos{background:rgba(92,230,92,.08);border:1px solid rgba(92,230,92,.2)}
+  .variance-box.neg{background:rgba(255,122,107,.08);border:1px solid rgba(255,122,107,.2)}
+  .variance-box.warn{background:rgba(240,192,80,.08);border:1px solid rgba(240,192,80,.2)}
+  .variance-icon{font-size:20px;flex-shrink:0}.variance-text{flex:1}
+  .var-label{color:var(--text-secondary);font-size:11px;text-transform:uppercase;letter-spacing:1px}
+  .var-value{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px;margin-top:2px}
+  .var-pos{color:var(--positive)}.var-neg{color:var(--negative)}.var-warn{color:var(--warning)}
+  .divisor-insight{background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 14px;margin-bottom:18px;font-size:12px;color:var(--text-muted);line-height:1.5}
+  .divisor-insight strong{font-family:'JetBrains Mono',monospace}
+  .btn{width:100%;padding:16px;border:none;border-radius:14px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;letter-spacing:1px;text-transform:uppercase;cursor:pointer;position:relative;overflow:hidden;transition:all .3s ease}
+  .btn::after{content:'';position:absolute;top:0;left:0;right:0;height:50%;background:linear-gradient(180deg,rgba(255,255,255,.1),transparent);pointer-events:none;border-radius:14px 14px 0 0}
+  .btn:active{transform:scale(.98)}
+  .btn-primary{background:linear-gradient(135deg,var(--accent-dim),#2d8a2d);color:#0d1a0d}
+  .btn-primary:hover{box-shadow:0 8px 30px rgba(92,230,92,.25);transform:translateY(-1px)}
+  .btn-secondary{background:var(--bg-card-alt);color:var(--text-secondary);border:1px solid var(--border-subtle);margin-top:10px}
+  .btn-warn{background:linear-gradient(135deg,#b8930a,#8a6f08);color:#fff;margin-top:10px}
+  .btn-danger{background:rgba(255,85,85,.1);color:var(--danger);border:1px solid rgba(255,85,85,.25);margin-top:10px}
+  .ppm-bar-container{margin-bottom:18px}
+  .ppm-bar-label{display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px;font-weight:600;color:var(--text-secondary)}
+  .ppm-bar-track{width:100%;height:30px;background:var(--bg-input);border-radius:15px;overflow:hidden;display:flex;border:1px solid var(--border-subtle)}
+  .ppm-segment{height:100%;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;color:rgba(0,0,0,.7);transition:width .8s cubic-bezier(.34,1.56,.64,1);overflow:hidden;white-space:nowrap}
+  .seg-water{background:var(--water-blue)}.seg-mg{background:var(--mg-teal)}.seg-ca{background:var(--calcium-gold)}.seg-npk{background:var(--npk-coral)}
+  .ppm-legend{display:flex;flex-wrap:wrap;gap:10px;margin-top:8px}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--text-secondary)}
+  .legend-dot{width:10px;height:10px;border-radius:3px}
+  .summary-table{width:100%;border-collapse:collapse;margin-top:6px}
+  .summary-table th{font-size:9px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;padding:7px 3px;text-align:left;border-bottom:1px solid var(--border-subtle)}
+  .summary-table th:not(:first-child){text-align:right}
+  .summary-table td{padding:10px 3px;font-family:'JetBrains Mono',monospace;font-size:12px;border-bottom:1px solid rgba(42,74,42,.3)}
+  .summary-table td:not(:first-child){text-align:right}
+  .summary-table td:first-child{font-family:'DM Sans',sans-serif;font-weight:600;font-size:12px}
+  .row-mg td:first-child{color:var(--mg-teal)}.row-ca td:first-child{color:var(--calcium-gold)}.row-npk td:first-child{color:var(--npk-coral)}
+  .var-cell{font-weight:600}
+  .final-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+  .stat-box{background:var(--bg-card-alt);border:1px solid var(--border-subtle);border-radius:12px;padding:14px;text-align:center}
+  .stat-label{font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px}
+  .stat-value{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:600}
+  .stat-sub{font-size:11px;color:var(--text-muted);margin-top:3px;font-family:'JetBrains Mono',monospace}
+  .calibration-card{background:var(--bg-card-alt);border:1px solid var(--border-subtle);border-radius:12px;padding:16px;margin-top:14px}
+  .cal-title{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .cal-desc{font-size:11px;color:var(--text-muted);margin-bottom:12px;line-height:1.5}
+  .cal-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid rgba(42,74,42,.2)}
+  .cal-row:last-child{border-bottom:none}
+  .cal-label{color:var(--text-secondary);font-size:12px}.cal-label strong{color:var(--text-primary);font-family:'JetBrains Mono',monospace}
+  .cal-value{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:14px}
+  .cal-arrow{color:var(--text-muted);margin:0 4px}
+  .active-divisors{background:var(--bg-card-alt);border:1px solid var(--border-subtle);border-radius:10px;padding:14px;margin-bottom:18px}
+  .ad-title{font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+  .ad-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:13px}
+  .ad-label{color:var(--text-secondary)}.ad-val{font-family:'JetBrains Mono',monospace;font-weight:600}
+  .ad-custom{font-size:10px;color:var(--accent);font-weight:600}
+  .ad-default{font-size:10px;color:var(--text-muted);font-style:italic}
+  .btn-text{background:none;border:none;color:var(--accent-dim);font-size:11px;font-weight:600;cursor:pointer;text-transform:uppercase;letter-spacing:1px;padding:4px 8px;border-radius:4px}
+  .history-card{background:var(--bg-card-alt);border:1px solid var(--border-subtle);border-radius:12px;padding:16px;margin-top:14px}
+  .history-title{font-size:13px;font-weight:700;color:var(--text-primary);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .history-entry{background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:11px}
+  .history-entry:last-child{margin-bottom:0}
+  .history-date{color:var(--text-muted);font-size:10px;margin-bottom:6px}
+  .history-divs{display:flex;gap:12px;font-family:'JetBrains Mono',monospace;font-weight:500;font-size:12px}
+  .history-empty{color:var(--text-muted);font-size:12px;font-style:italic}
+  .error-msg{display:none;background:rgba(255,85,85,.1);border:1px solid rgba(255,85,85,.25);border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px;color:var(--danger);text-align:center;animation:shake .4s ease-out}
+  .error-msg.visible{display:block}
+  @keyframes fadeDown{from{opacity:0;transform:translateY(-20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+  @media(max-width:360px){.header h1{font-size:22px}.card{padding:16px}.stat-value{font-size:17px}.summary-table td{font-size:10px;padding:8px 2px}.summary-table th{font-size:8px;padding:5px 2px}.stage-btn{padding:10px 8px}.stage-ppm{font-size:15px}}
+  input[type="number"]{font-size:20px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header"><span class="header-icon">🌱</span><h1>HydroCalc NFT</h1><p>Nutrient Wizard</p></div>
+  <div class="stepper">
+    <div class="step-dot active" id="sd1">1</div><div class="step-line" id="sl1"></div>
+    <div class="step-dot" id="sd2">2</div><div class="step-line" id="sl2"></div>
+    <div class="step-dot" id="sd3">3</div><div class="step-line" id="sl3"></div>
+    <div class="step-dot" id="sd4">4</div><div class="step-line" id="sl4"></div>
+    <div class="step-dot" id="sd5">5</div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="step-panel active" id="panel1"><div class="card">
+    <div class="card-title">🌱 Paso 1 — Configuración</div>
+    <div class="active-divisors" id="activeDivisors">
+      <div class="ad-title"><span>🔬 Divisores Activos</span><button class="btn-text" id="resetDivBtn" onclick="resetDivisors()" style="display:none">Resetear</button></div>
+      <div class="ad-row"><span class="ad-label">Mg ÷</span><span class="ad-val hl-mg" id="adMg">4.54</span></div>
+      <div class="ad-row"><span class="ad-label">Ca ÷</span><span class="ad-val hl-ca" id="adCa">6.10</span></div>
+      <div class="ad-row"><span class="ad-label">NPK ÷</span><span class="ad-val hl-npk" id="adNpk">5.28</span></div>
+      <div id="adStatus" style="margin-top:8px"></div>
+    </div>
+    <div class="input-label" style="margin-bottom:10px"><span class="dot dot-target"></span>Etapa de Crecimiento</div>
+    <div class="stage-grid">
+      <div class="stage-btn" onclick="selectStage(0)"><div class="stage-name">Establecimiento</div><div class="stage-week">Semana 1</div><div class="stage-ppm">710</div><div class="stage-note">Raíces blancas y fuertes</div></div>
+      <div class="stage-btn" onclick="selectStage(1)"><div class="stage-name">Crecimiento</div><div class="stage-week">Semana 2-3</div><div class="stage-ppm">820</div><div class="stage-note">Máximo desarrollo foliar</div></div>
+      <div class="stage-btn" onclick="selectStage(2)"><div class="stage-name">Pre-Cosecha</div><div class="stage-week">Semana 4</div><div class="stage-ppm">840</div><div class="stage-note">Subimos Azufre y Potasio</div></div>
+      <div class="stage-btn" onclick="selectStage(3)"><div class="stage-name">Cosecha</div><div class="stage-week">Final</div><div class="stage-ppm">850</div><div class="stage-note">Sabor intenso, baja Nitrógeno</div></div>
+    </div>
+    <div class="input-group"><label class="input-label"><span class="dot dot-water"></span>PPM del Agua</label><div class="input-wrapper"><input type="number" id="waterPpm" placeholder="150" inputmode="decimal" step="any"><span class="input-unit">PPM</span></div></div>
+    <div class="input-group"><label class="input-label"><span class="dot dot-target"></span>PPM Objetivo</label><div class="input-wrapper"><input type="number" id="targetPpm" placeholder="710" inputmode="decimal" step="any"><span class="input-unit">PPM</span></div></div>
+    <div class="input-group"><label class="input-label"><span class="dot dot-vol"></span>Volumen de Agua</label><div class="input-wrapper"><input type="number" id="waterVol" placeholder="25" value="25" inputmode="decimal" step="any"><span class="input-unit">GAL</span></div></div>
+    <div class="breakdown" id="previewBreakdown" style="display:none">
+      <div class="breakdown-title">Plan de PPM (Mg fijo · Ratio Ca:NPK = 2:1)</div>
+      <div class="breakdown-row"><span class="bl">Magnesio (fijo)</span><span class="bv hl-mg" id="prevMg">-</span></div>
+      <div class="breakdown-row"><span class="bl">Calcio (⅔)</span><span class="bv hl-ca" id="prevCa">-</span></div>
+      <div class="breakdown-row"><span class="bl">NPK (⅓)</span><span class="bv hl-npk" id="prevNpk">-</span></div>
+      <div class="breakdown-row" style="border-top:1px solid var(--border-subtle);margin-top:6px;padding-top:8px"><span class="bl">Total</span><span class="bv" style="color:var(--accent)" id="prevTotal">-</span></div>
+    </div>
+    <div class="ratio-note"><strong>Mg = 70 PPM fijo</strong> · Restante: <strong>Ca ⅔ : NPK ⅓</strong></div>
+    <div class="error-msg" id="err1"></div>
+    <button class="btn btn-primary" onclick="goStep2()">Calcular Plan →</button>
+  </div></div>
+
+  <!-- STEP 2: Mg -->
+  <div class="step-panel" id="panel2"><div class="card">
+    <div class="card-title"><span style="color:var(--mg-teal)">◆</span> Paso 2 — Magnesio</div>
+    <div class="instruction"><div class="inst-title">⚖️ Pesa y Añade Magnesio</div><div class="inst-body">Añade para <strong id="mgVolLabel">25 gal</strong>, mezcla, y mide.<span class="inst-highlight hl-mg" id="mgGramsShow">0.00 g</span></div></div>
+    <div class="expected-box"><span>PPM esperado después del Mg</span><strong id="mgExpShow" style="color:var(--mg-teal)">0</strong></div>
+    <div class="input-group"><label class="input-label"><span class="dot dot-mg"></span>PPM Real Medido</label><div class="input-wrapper"><input type="number" id="mgActualInput" placeholder="220" inputmode="decimal" step="any"><span class="input-unit">PPM</span></div></div>
+    <!-- Shortfall correction for Mg -->
+    <div class="shortfall-box" id="mgShortfall">
+      <div class="shortfall-header">⚠️ PPM por debajo del plan</div>
+      <div class="shortfall-body" id="mgShortfallBody"></div>
+      <div class="shortfall-input">
+        <label class="input-label"><span class="dot dot-mg"></span>PPM después de corregir</label>
+        <div class="input-wrapper"><input type="number" id="mgCorrectedInput" placeholder="220" inputmode="decimal" step="any"><span class="input-unit">PPM</span></div>
+      </div>
+    </div>
+    <div class="error-msg" id="err2"></div>
+    <button class="btn btn-primary" id="mgNextBtn" onclick="goStep3()">Siguiente →</button>
+    <button class="btn btn-secondary" onclick="goBack(1)">← Atrás</button>
+  </div></div>
+
+  <!-- STEP 3: Ca -->
+  <div class="step-panel" id="panel3"><div class="card">
+    <div class="card-title"><span style="color:var(--calcium-gold)">◆</span> Paso 3 — Calcio</div>
+    <div class="variance-box" id="varMg"><span class="variance-icon" id="varMgIcon">✅</span><div class="variance-text"><div class="var-label">Variación Magnesio</div><div class="var-value" id="varMgVal">Perfecto</div></div></div>
+    <div class="divisor-insight" id="mgDivInsight" style="display:none"></div>
+    <div class="instruction"><div class="inst-title">⚖️ Pesa y Añade Calcio</div><div class="inst-body">Añade para <strong id="caVolLabel">25 gal</strong>, mezcla, y mide.<span class="inst-highlight hl-ca" id="caGramsShow">0.00 g</span></div></div>
+    <div class="expected-box"><span>PPM esperado después del Ca</span><strong id="caExpShow" style="color:var(--calcium-gold)">0</strong></div>
+    <div class="input-group"><label class="input-label"><span class="dot dot-ca"></span>PPM Real Medido</label><div class="input-wrapper"><input type="number" id="caActualInput" placeholder="435" inputmode="decimal" step="any"><span class="input-unit">PPM</span></div></div>
+    <!-- Shortfall correction for Ca -->
+    <div class="shortfall-box" id="caShortfall">
+      <div class="shortfall-header">⚠️ PPM por debajo del plan</div>
+      <div class="shortfall-body" id="caShortfallBody"></div>
+      <div class="shortfall-input">
+        <label class="input-label"><span class="dot dot-ca"></span>PPM después de corregir</label>
+        <div class="input-wrapper"><input type="number" id="caCorrectedInput" placeholder="435" inputmode="decimal" step="any"><span class="input-unit">PPM</span></div>
+      </div>
+    </div>
+    <div class="error-msg" id="err3"></div>
+    <button class="btn btn-primary" id="caNextBtn" onclick="goStep4()">Siguiente →</button>
+    <button class="btn btn-secondary" onclick="goBack(2)">← Atrás</button>
+  </div></div>
+
+  <!-- STEP 4: NPK -->
+  <div class="step-panel" id="panel4"><div class="card">
+    <div class="card-title"><span style="color:var(--npk-coral)">◆</span> Paso 4 — NPK (Abono)</div>
+    <div class="variance-box" id="varCa"><span class="variance-icon" id="varCaIcon">✅</span><div class="variance-text"><div class="var-label">Variación Calcio</div><div class="var-value" id="varCaVal">Perfecto</div></div></div>
+    <div class="divisor-insight" id="caDivInsight" style="display:none"></div>
+    <div class="instruction"><div class="inst-title">⚖️ Pesa y Añade NPK (Abono)</div><div class="inst-body">Última adición para <strong id="npkVolLabel">25 gal</strong>. Añade, mezcla, y mide.<span class="inst-highlight hl-npk" id="npkGramsShow">0.00 g</span></div></div>
+    <div class="expected-box"><span>PPM final esperado</span><strong id="npkExpShow" style="color:var(--npk-coral)">0</strong></div>
+    <div class="input-group"><label class="input-label"><span class="dot dot-npk"></span>PPM Final Real</label><div class="input-wrapper"><input type="number" id="npkActualInput" placeholder="650" inputmode="decimal" step="any"><span class="input-unit">PPM</span></div></div>
+    <!-- Shortfall correction for NPK -->
+    <div class="shortfall-box" id="npkShortfall">
+      <div class="shortfall-header">⚠️ PPM por debajo del plan</div>
+      <div class="shortfall-body" id="npkShortfallBody"></div>
+      <div class="shortfall-input">
+        <label class="input-label"><span class="dot dot-npk"></span>PPM después de corregir</label>
+        <div class="input-wrapper"><input type="number" id="npkCorrectedInput" placeholder="650" inputmode="decimal" step="any"><span class="input-unit">PPM</span></div>
+      </div>
+    </div>
+    <div class="error-msg" id="err4"></div>
+    <button class="btn btn-primary" id="npkNextBtn" onclick="goStep5()">Ver Resumen →</button>
+    <button class="btn btn-secondary" onclick="goBack(3)">← Atrás</button>
+  </div></div>
+
+  <!-- STEP 5: Summary -->
+  <div class="step-panel" id="panel5"><div class="card">
+    <div class="card-title">📊 Resumen de Sesión</div>
+    <div class="ratio-note" id="summaryMeta" style="margin-bottom:16px"></div>
+    <div class="ppm-bar-container">
+      <div class="ppm-bar-label"><span>0</span><span id="barTarget">0</span></div>
+      <div class="ppm-bar-track"><div class="ppm-segment seg-water" id="segWater"></div><div class="ppm-segment seg-mg" id="segMg"></div><div class="ppm-segment seg-ca" id="segCa"></div><div class="ppm-segment seg-npk" id="segNpk"></div></div>
+      <div class="ppm-legend"><div class="legend-item"><div class="legend-dot" style="background:var(--water-blue)"></div>Agua</div><div class="legend-item"><div class="legend-dot" style="background:var(--mg-teal)"></div>Mg</div><div class="legend-item"><div class="legend-dot" style="background:var(--calcium-gold)"></div>Ca</div><div class="legend-item"><div class="legend-dot" style="background:var(--npk-coral)"></div>NPK</div></div>
+    </div>
+    <table class="summary-table"><thead><tr><th>Nutriente</th><th>Plan</th><th>Real</th><th>Var.</th><th>Gramos</th></tr></thead><tbody>
+      <tr class="row-mg"><td>Magnesio</td><td id="tMgE">-</td><td id="tMgR">-</td><td class="var-cell" id="tMgV">-</td><td id="tMgG">-</td></tr>
+      <tr class="row-ca"><td>Calcio</td><td id="tCaE">-</td><td id="tCaR">-</td><td class="var-cell" id="tCaV">-</td><td id="tCaG">-</td></tr>
+      <tr class="row-npk"><td>NPK</td><td id="tNpkE">-</td><td id="tNpkR">-</td><td class="var-cell" id="tNpkV">-</td><td id="tNpkG">-</td></tr>
+    </tbody></table>
+    <div class="final-stats">
+      <div class="stat-box"><div class="stat-label">Objetivo</div><div class="stat-value" style="color:var(--accent)" id="sTarget">0</div></div>
+      <div class="stat-box"><div class="stat-label">Final Real</div><div class="stat-value" id="sFinal">0</div><div class="stat-sub" id="sFinalDiff"></div></div>
+      <div class="stat-box"><div class="stat-label">Total Gramos</div><div class="stat-value" style="color:var(--text-primary)" id="sTotalG">0</div></div>
+      <div class="stat-box"><div class="stat-label">Precisión</div><div class="stat-value" id="sAccuracy">0%</div></div>
+    </div>
+    <div class="calibration-card">
+      <div class="cal-title">🔬 Divisores — Guardado Automático</div>
+      <div class="cal-desc">Nuevos divisores guardados para la próxima sesión.</div>
+      <div class="cal-row"><span class="cal-label">Mg: <strong id="calMgOld">4.54</strong> <span class="cal-arrow">→</span></span><span class="cal-value hl-mg" id="calMg">—</span></div>
+      <div class="cal-row"><span class="cal-label">Ca: <strong id="calCaOld">6.10</strong> <span class="cal-arrow">→</span></span><span class="cal-value hl-ca" id="calCa">—</span></div>
+      <div class="cal-row"><span class="cal-label">NPK: <strong id="calNpkOld">5.28</strong> <span class="cal-arrow">→</span></span><span class="cal-value hl-npk" id="calNpk">—</span></div>
+      <div id="saveStatus" style="margin-top:10px;font-size:12px;color:var(--accent)"></div>
+    </div>
+    <div class="history-card" id="historyCard"><div class="history-title">📜 Historial</div><div id="historyList"></div></div>
+    <br>
+    <button class="btn btn-primary" onclick="restart()">🔄 Nueva Mezcla</button>
+    <button class="btn btn-danger" onclick="clearHistory()">🗑 Borrar Historial</button>
+  </div></div>
+</div>
+
+<script>
+const DEFAULT_MG=4.54,DEFAULT_CA=6.10,DEFAULT_NPK=5.28,BASE_VOL=25,MG_FIXED=70;
+const STAGES=[{name:'Establecimiento',total:710},{name:'Crecimiento',total:820},{name:'Pre-Cosecha',total:840},{name:'Cosecha',total:850}];
+let S={},selectedStage=-1;
+
+function loadDiv(){try{const d=JSON.parse(localStorage.getItem('hydroCalcDivisors'));if(d&&d.mg&&d.ca&&d.npk)return d}catch(e){}return{mg:DEFAULT_MG,ca:DEFAULT_CA,npk:DEFAULT_NPK}}
+function saveDiv(mg,ca,npk){const d={mg:rd2(mg),ca:rd2(ca),npk:rd2(npk)};localStorage.setItem('hydroCalcDivisors',JSON.stringify(d));return d}
+function loadHist(){try{const h=JSON.parse(localStorage.getItem('hydroCalcHistory'));if(Array.isArray(h))return h}catch(e){}return[]}
+function saveHist(e){const h=loadHist();h.unshift(e);if(h.length>10)h.length=10;localStorage.setItem('hydroCalcHistory',JSON.stringify(h))}
+function clearHistory(){if(confirm('¿Borrar historial?')){localStorage.removeItem('hydroCalcHistory');renderHist()}}
+function resetDivisors(){if(confirm('¿Resetear a: Mg 4.54 · Ca 6.10 · NPK 5.28?')){localStorage.removeItem('hydroCalcDivisors');refreshDiv()}}
+
+function fmt(n){return(Math.round(n*100)/100).toFixed(2)}
+function r(n){return Math.round(n)}
+function rd2(n){return Math.round(n*100)/100}
+function err(id,m){const e=document.getElementById(id);e.textContent=m;e.classList.add('visible')}
+function clr(id){document.getElementById(id).classList.remove('visible')}
+
+function setStep(n){
+  for(let i=1;i<=5;i++){
+    document.getElementById('panel'+i).classList.toggle('active',i===n);
+    const d=document.getElementById('sd'+i);d.classList.remove('active','done');
+    if(i<n){d.classList.add('done');d.textContent='✓'}
+    else if(i===n){d.classList.add('active');d.textContent=i}
+    else d.textContent=i;
+    if(i<5)document.getElementById('sl'+i).classList.toggle('done',i<n);
+  }
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function refreshDiv(){
+  const d=loadDiv();
+  document.getElementById('adMg').textContent=d.mg.toFixed(2);
+  document.getElementById('adCa').textContent=d.ca.toFixed(2);
+  document.getElementById('adNpk').textContent=d.npk.toFixed(2);
+  const custom=(d.mg!==DEFAULT_MG||d.ca!==DEFAULT_CA||d.npk!==DEFAULT_NPK);
+  document.getElementById('resetDivBtn').style.display=custom?'block':'none';
+  document.getElementById('adStatus').innerHTML=custom?'<span class="ad-custom">✓ Calibrados de tu última sesión</span>':'<span class="ad-default">Valores teóricos por defecto</span>';
+}
+
+function renderHist(){
+  const h=loadHist(),list=document.getElementById('historyList');
+  if(!h.length){list.innerHTML='<div class="history-empty">Sin sesiones previas</div>';return}
+  list.innerHTML=h.map(e=>'<div class="history-entry"><div class="history-date">'+e.date+' · '+e.stage+' · '+e.vol+' gal</div><div class="history-divs"><span class="hl-mg">Mg '+e.mg+'</span><span class="hl-ca">Ca '+e.ca+'</span><span class="hl-npk">NPK '+e.npk+'</span><span style="color:var(--text-muted);margin-left:auto">'+e.accuracy+'%</span></div></div>').join('');
+}
+
+function selectStage(i){selectedStage=i;document.querySelectorAll('.stage-btn').forEach((b,j)=>b.classList.toggle('selected',j===i));document.getElementById('targetPpm').value=STAGES[i].total;updatePrev()}
+function updatePrev(){
+  const w=parseFloat(document.getElementById('waterPpm').value)||0,t=parseFloat(document.getElementById('targetPpm').value)||0,p=document.getElementById('previewBreakdown');
+  if(t>w&&(t-w)>=MG_FIXED){const rem=t-w-MG_FIXED;document.getElementById('prevMg').textContent=MG_FIXED+' PPM';document.getElementById('prevCa').textContent=r(rem*(2/3))+' PPM';document.getElementById('prevNpk').textContent=r(rem*(1/3))+' PPM';document.getElementById('prevTotal').textContent=r(t)+' PPM';p.style.display='block'}else p.style.display='none';
+}
+document.getElementById('waterPpm').addEventListener('input',updatePrev);
+document.getElementById('targetPpm').addEventListener('input',function(){selectedStage=-1;document.querySelectorAll('.stage-btn').forEach(b=>b.classList.remove('selected'));updatePrev()});
+
+function showVar(bId,iId,vId,exp,act){
+  const b=document.getElementById(bId),ic=document.getElementById(iId),v=document.getElementById(vId),d=act-exp;
+  b.classList.add('visible');b.classList.remove('pos','neg','warn');
+  if(Math.abs(d)<=5){b.classList.add('pos');ic.textContent='✅';v.className='var-value var-pos';v.textContent='Perfecto (±'+Math.abs(r(d))+' PPM)'}
+  else if(d>0){b.classList.add('neg');ic.textContent='⚠️';v.className='var-value var-neg';v.textContent='+'+r(d)+' PPM por encima'}
+  else{b.classList.add('warn');ic.textContent='⚠️';v.className='var-value var-warn';v.textContent=r(d)+' PPM por debajo'}
+}
+function varCell(id,d){const e=document.getElementById(id);if(Math.abs(d)<=5){e.textContent='✓';e.style.color='var(--positive)'}else if(d>0){e.textContent='+'+r(d);e.style.color='var(--negative)'}else{e.textContent=''+r(d);e.style.color='var(--warning)'}}
+
+function calcRealDiv(realPpm,gramsUsed,scale){
+  const gAt25=gramsUsed/scale;
+  return realPpm>0&&gAt25>0?realPpm/gAt25:null;
+}
+
+// ===== STEP 1 → 2 =====
+function goStep2(){
+  clr('err1');
+  const w=parseFloat(document.getElementById('waterPpm').value),t=parseFloat(document.getElementById('targetPpm').value),v=parseFloat(document.getElementById('waterVol').value);
+  if(isNaN(w)||isNaN(t)){err('err1','Ingresa valores válidos');return}
+  if(t<=w){err('err1','PPM objetivo debe ser mayor al del agua');return}
+  if(isNaN(v)||v<=0){err('err1','Volumen inválido');return}
+  if((t-w)<MG_FIXED){err('err1','Delta debe ser al menos 70 PPM');return}
+
+  const div=loadDiv();S.water=w;S.target=t;S.vol=v;S.scale=v/BASE_VOL;
+  S.stageName=selectedStage>=0?STAGES[selectedStage].name:'Manual';
+  S.divUsed={mg:div.mg,ca:div.ca,npk:div.npk};
+  S.mgPpm=MG_FIXED;const rem=t-w-MG_FIXED;S.caPpm=rem*(2/3);S.npkPpm=rem*(1/3);
+  S.mgG=(S.mgPpm/div.mg)*S.scale;S.caG=(S.caPpm/div.ca)*S.scale;S.npkG=(S.npkPpm/div.npk)*S.scale;
+  S.mgExp=w+S.mgPpm;S.mgTotalG=S.mgG;S.caTotalG=S.caG;S.npkTotalG=S.npkG;
+
+  // Reset shortfall states
+  S.mgCorrected=false;S.caCorrected=false;S.npkCorrected=false;
+  document.getElementById('mgShortfall').classList.remove('visible');
+  document.getElementById('caShortfall').classList.remove('visible');
+  document.getElementById('npkShortfall').classList.remove('visible');
+
+  document.getElementById('mgGramsShow').textContent=fmt(S.mgG)+' g';
+  document.getElementById('mgExpShow').textContent=r(S.mgExp);
+  document.getElementById('mgVolLabel').textContent=fmt(v)+' gal';
+  setStep(2);
+}
+
+// ===== STEP 2 → 3 (Mg) =====
+function goStep3(){
+  clr('err2');
+  const sf=document.getElementById('mgShortfall');
+
+  // If shortfall was shown, read corrected value
+  if(sf.classList.contains('visible')){
+    const corrected=parseFloat(document.getElementById('mgCorrectedInput').value);
+    if(isNaN(corrected)){err('err2','Ingresa el PPM después de corregir');return}
+    S.mgActual=corrected;S.mgCorrected=true;
+    // Recalc real div using TOTAL grams added
+    const realMgPpm=corrected-S.water;
+    S.mgRealDiv=calcRealDiv(realMgPpm,S.mgTotalG,S.scale)||S.divUsed.mg;
+  } else {
+    const actual=parseFloat(document.getElementById('mgActualInput').value);
+    if(isNaN(actual)){err('err2','Ingresa el PPM real medido');return}
+
+    const realMgPpm=actual-S.water;
+    const realDiv=calcRealDiv(realMgPpm,S.mgG,S.scale);
+    S.mgRealDiv=realDiv||S.divUsed.mg;
+
+    // Check if SHORT
+    if(actual<S.mgExp-5){
+      const shortPpm=S.mgExp-actual;
+      // Use real divisor to calculate extra grams needed
+      const extraG=(shortPpm/S.mgRealDiv)*S.scale;
+      S.mgTotalG=S.mgG+extraG;
+
+      sf.classList.add('visible');
+      document.getElementById('mgShortfallBody').innerHTML=
+        'Faltan <strong>'+r(shortPpm)+' PPM</strong> para llegar al plan de '+r(S.mgExp)+' PPM.<br>'+
+        'Añade esta cantidad adicional usando el divisor real (<strong class="hl-mg">'+S.mgRealDiv.toFixed(2)+'</strong>):'+
+        '<span class="shortfall-amount hl-mg">+ '+fmt(extraG)+' g más de Mg</span>'+
+        '<div class="shortfall-detail">Total Mg usado: '+fmt(S.mgTotalG)+' g<br>Divisor real: '+S.mgRealDiv.toFixed(2)+' (teórico: '+S.divUsed.mg.toFixed(2)+')</div>';
+      return; // Wait for corrected reading
+    }
+
+    S.mgActual=actual;
+  }
+
+  // Proceed to Ca
+  showVar('varMg','varMgIcon','varMgVal',S.mgExp,S.mgActual);
+  const ins=document.getElementById('mgDivInsight');
+  if(Math.abs(S.mgRealDiv-S.divUsed.mg)>0.1){ins.innerHTML='🔬 Divisor Mg real: <strong class="hl-mg">'+S.mgRealDiv.toFixed(2)+'</strong> (usaste '+S.divUsed.mg.toFixed(2)+')';ins.style.display='block'}else ins.style.display='none';
+
+  S.caExpFromActual=S.mgActual+S.caPpm;
+  document.getElementById('caGramsShow').textContent=fmt(S.caG)+' g';
+  document.getElementById('caExpShow').textContent=r(S.caExpFromActual);
+  document.getElementById('caVolLabel').textContent=fmt(S.vol)+' gal';
+  setStep(3);
+}
+
+// ===== STEP 3 → 4 (Ca) =====
+function goStep4(){
+  clr('err3');
+  const sf=document.getElementById('caShortfall');
+
+  if(sf.classList.contains('visible')){
+    const corrected=parseFloat(document.getElementById('caCorrectedInput').value);
+    if(isNaN(corrected)){err('err3','Ingresa el PPM después de corregir');return}
+    S.caActual=corrected;S.caCorrected=true;
+    const realCaPpm=corrected-S.mgActual;
+    S.caRealDiv=calcRealDiv(realCaPpm,S.caTotalG,S.scale)||S.divUsed.ca;
+  } else {
+    const actual=parseFloat(document.getElementById('caActualInput').value);
+    if(isNaN(actual)){err('err3','Ingresa el PPM real medido');return}
+
+    const realCaPpm=actual-S.mgActual;
+    const realDiv=calcRealDiv(realCaPpm,S.caG,S.scale);
+    S.caRealDiv=realDiv||S.divUsed.ca;
+
+    if(actual<S.caExpFromActual-5){
+      const shortPpm=S.caExpFromActual-actual;
+      const extraG=(shortPpm/S.caRealDiv)*S.scale;
+      S.caTotalG=S.caG+extraG;
+
+      sf.classList.add('visible');
+      document.getElementById('caShortfallBody').innerHTML=
+        'Faltan <strong>'+r(shortPpm)+' PPM</strong> para llegar al plan de '+r(S.caExpFromActual)+' PPM.<br>'+
+        'Añade usando divisor real (<strong class="hl-ca">'+S.caRealDiv.toFixed(2)+'</strong>):'+
+        '<span class="shortfall-amount hl-ca">+ '+fmt(extraG)+' g más de Ca</span>'+
+        '<div class="shortfall-detail">Total Ca usado: '+fmt(S.caTotalG)+' g<br>Divisor real: '+S.caRealDiv.toFixed(2)+' (teórico: '+S.divUsed.ca.toFixed(2)+')</div>';
+      return;
+    }
+
+    S.caActual=actual;
+  }
+
+  showVar('varCa','varCaIcon','varCaVal',S.caExpFromActual,S.caActual);
+  const ins=document.getElementById('caDivInsight');
+  if(Math.abs(S.caRealDiv-S.divUsed.ca)>0.1){ins.innerHTML='🔬 Divisor Ca real: <strong class="hl-ca">'+S.caRealDiv.toFixed(2)+'</strong> (usaste '+S.divUsed.ca.toFixed(2)+')';ins.style.display='block'}else ins.style.display='none';
+
+  S.npkExpFromActual=S.caActual+S.npkPpm;
+  document.getElementById('npkGramsShow').textContent=fmt(S.npkG)+' g';
+  document.getElementById('npkExpShow').textContent=r(S.npkExpFromActual);
+  document.getElementById('npkVolLabel').textContent=fmt(S.vol)+' gal';
+  setStep(4);
+}
+
+// ===== STEP 4 → 5 (NPK) =====
+function goStep5(){
+  clr('err4');
+  const sf=document.getElementById('npkShortfall');
+
+  if(sf.classList.contains('visible')){
+    const corrected=parseFloat(document.getElementById('npkCorrectedInput').value);
+    if(isNaN(corrected)){err('err4','Ingresa el PPM después de corregir');return}
+    S.npkActual=corrected;S.npkCorrected=true;
+    const realNpkPpm=corrected-S.caActual;
+    S.npkRealDiv=calcRealDiv(realNpkPpm,S.npkTotalG,S.scale)||S.divUsed.npk;
+  } else {
+    const actual=parseFloat(document.getElementById('npkActualInput').value);
+    if(isNaN(actual)){err('err4','Ingresa el PPM final real');return}
+
+    const realNpkPpm=actual-S.caActual;
+    const realDiv=calcRealDiv(realNpkPpm,S.npkG,S.scale);
+    S.npkRealDiv=realDiv||S.divUsed.npk;
+
+    if(actual<S.npkExpFromActual-5){
+      const shortPpm=S.npkExpFromActual-actual;
+      const extraG=(shortPpm/S.npkRealDiv)*S.scale;
+      S.npkTotalG=S.npkG+extraG;
+
+      sf.classList.add('visible');
+      document.getElementById('npkShortfallBody').innerHTML=
+        'Faltan <strong>'+r(shortPpm)+' PPM</strong> para llegar al objetivo de '+r(S.npkExpFromActual)+' PPM.<br>'+
+        'Añade usando divisor real (<strong class="hl-npk">'+S.npkRealDiv.toFixed(2)+'</strong>):'+
+        '<span class="shortfall-amount hl-npk">+ '+fmt(extraG)+' g más de NPK</span>'+
+        '<div class="shortfall-detail">Total NPK usado: '+fmt(S.npkTotalG)+' g<br>Divisor real: '+S.npkRealDiv.toFixed(2)+' (teórico: '+S.divUsed.npk.toFixed(2)+')</div>';
+      return;
+    }
+
+    S.npkActual=actual;
+  }
+
+  // ===== SAVE DIVISORS =====
+  const saved=saveDiv(S.mgRealDiv,S.caRealDiv,S.npkRealDiv);
+
+  const now=new Date();
+  const dateStr=now.toLocaleDateString('es-PR',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  const finalDiff=S.npkActual-S.target;
+  const acc=Math.max(0,100-(Math.abs(finalDiff)/S.target*100));
+
+  saveHist({date:dateStr,stage:S.stageName,vol:fmt(S.vol),target:r(S.target),final:r(S.npkActual),mg:saved.mg.toFixed(2),ca:saved.ca.toFixed(2),npk:saved.npk.toFixed(2),accuracy:acc.toFixed(1)});
+
+  // Summary
+  document.getElementById('summaryMeta').innerHTML='<strong>'+S.stageName+'</strong> · '+fmt(S.vol)+' gal · Mg=70 fijo · Ca:NPK=2:1';
+
+  const realMg=S.mgActual-S.water,realCa=S.caActual-S.mgActual,realNpk=S.npkActual-S.caActual;
+  const barMax=Math.max(S.target,S.npkActual);
+  const pct=v=>Math.max(0,(v/barMax)*100);
+  document.getElementById('segWater').style.width=pct(S.water)+'%';
+  document.getElementById('segMg').style.width=pct(realMg)+'%';
+  document.getElementById('segCa').style.width=pct(realCa)+'%';
+  document.getElementById('segNpk').style.width=pct(realNpk)+'%';
+  document.getElementById('segWater').textContent=pct(S.water)>8?r(S.water):'';
+  document.getElementById('segMg').textContent=pct(realMg)>6?r(realMg):'';
+  document.getElementById('segCa').textContent=pct(realCa)>8?r(realCa):'';
+  document.getElementById('segNpk').textContent=pct(realNpk)>8?r(realNpk):'';
+  document.getElementById('barTarget').textContent=r(S.target)+' obj. | '+r(S.npkActual)+' real';
+
+  document.getElementById('tMgE').textContent=r(S.mgPpm);document.getElementById('tMgR').textContent=r(realMg);varCell('tMgV',realMg-S.mgPpm);document.getElementById('tMgG').textContent=fmt(S.mgTotalG);
+  document.getElementById('tCaE').textContent=r(S.caPpm);document.getElementById('tCaR').textContent=r(realCa);varCell('tCaV',realCa-S.caPpm);document.getElementById('tCaG').textContent=fmt(S.caTotalG);
+  document.getElementById('tNpkE').textContent=r(S.npkPpm);document.getElementById('tNpkR').textContent=r(realNpk);varCell('tNpkV',realNpk-S.npkPpm);document.getElementById('tNpkG').textContent=fmt(S.npkTotalG);
+
+  document.getElementById('sTarget').textContent=r(S.target);document.getElementById('sFinal').textContent=r(S.npkActual);
+  const fd=document.getElementById('sFinalDiff'),fv=document.getElementById('sFinal');
+  if(Math.abs(finalDiff)<=5){fd.textContent='✓ En punto';fd.style.color=fv.style.color='var(--positive)'}
+  else if(finalDiff>0){fd.textContent='+'+r(finalDiff)+' PPM';fd.style.color=fv.style.color='var(--negative)'}
+  else{fd.textContent=r(finalDiff)+' PPM';fd.style.color=fv.style.color='var(--warning)'}
+  document.getElementById('sTotalG').textContent=fmt(S.mgTotalG+S.caTotalG+S.npkTotalG);
+  const ae=document.getElementById('sAccuracy');ae.textContent=acc.toFixed(1)+'%';ae.style.color=acc>=98?'var(--positive)':acc>=95?'var(--warning)':'var(--negative)';
+
+  document.getElementById('calMgOld').textContent=S.divUsed.mg.toFixed(2);document.getElementById('calCaOld').textContent=S.divUsed.ca.toFixed(2);document.getElementById('calNpkOld').textContent=S.divUsed.npk.toFixed(2);
+  document.getElementById('calMg').textContent=saved.mg.toFixed(2);document.getElementById('calCa').textContent=saved.ca.toFixed(2);document.getElementById('calNpk').textContent=saved.npk.toFixed(2);
+  document.getElementById('saveStatus').textContent='✓ Divisores guardados automáticamente';
+
+  renderHist();setStep(5);
+}
+
+function goBack(s){setStep(s)}
+function restart(){
+  S={};selectedStage=-1;
+  document.querySelectorAll('input').forEach(i=>{if(i.id!=='waterVol')i.value=''});
+  document.querySelectorAll('.stage-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.variance-box').forEach(b=>b.classList.remove('visible','pos','neg','warn'));
+  document.querySelectorAll('.error-msg').forEach(e=>e.classList.remove('visible'));
+  document.querySelectorAll('.divisor-insight').forEach(d=>d.style.display='none');
+  document.querySelectorAll('.shortfall-box').forEach(b=>b.classList.remove('visible'));
+  document.getElementById('previewBreakdown').style.display='none';
+  refreshDiv();setStep(1);
+}
+
+document.querySelectorAll('input').forEach(input=>{input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();input.closest('.step-panel').querySelector('.btn-primary').click()}})});
+
+refreshDiv();renderHist();
+</script>
+</body>
+</html>
