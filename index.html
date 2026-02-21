@@ -179,13 +179,13 @@
     <div class="input-group"><label class="input-label"><span class="dot dot-target"></span>PPM Objetivo</label><div class="input-wrapper"><input type="number" id="targetPpm" placeholder="710" inputmode="decimal" step="any"><span class="input-unit">PPM</span></div></div>
     <div class="input-group"><label class="input-label"><span class="dot dot-vol"></span>Volumen de Agua</label><div class="input-wrapper"><input type="number" id="waterVol" placeholder="25" value="25" inputmode="decimal" step="any"><span class="input-unit">GAL</span></div></div>
     <div class="breakdown" id="previewBreakdown" style="display:none">
-      <div class="breakdown-title">Plan de PPM (Mg fijo · Ratio Ca:NPK = 2:1)</div>
+      <div class="breakdown-title">Plan de PPM (Mg fijo · Ca y NPK partes iguales)</div>
       <div class="breakdown-row"><span class="bl">Magnesio (fijo)</span><span class="bv hl-mg" id="prevMg">-</span></div>
-      <div class="breakdown-row"><span class="bl">Calcio (⅔)</span><span class="bv hl-ca" id="prevCa">-</span></div>
-      <div class="breakdown-row"><span class="bl">NPK (⅓)</span><span class="bv hl-npk" id="prevNpk">-</span></div>
+      <div class="breakdown-row"><span class="bl">Calcio (½)</span><span class="bv hl-ca" id="prevCa">-</span></div>
+      <div class="breakdown-row"><span class="bl">NPK (½)</span><span class="bv hl-npk" id="prevNpk">-</span></div>
       <div class="breakdown-row" style="border-top:1px solid var(--border-subtle);margin-top:6px;padding-top:8px"><span class="bl">Total</span><span class="bv" style="color:var(--accent)" id="prevTotal">-</span></div>
     </div>
-    <div class="ratio-note"><strong>Mg = 70 PPM fijo</strong> · Restante: <strong>Ca ⅔ : NPK ⅓</strong></div>
+    <div class="ratio-note"><strong>Mg = 70 PPM fijo</strong> · Restante: <strong>Ca ½ : NPK ½</strong> (partes iguales)</div>
     <div class="error-msg" id="err1"></div>
     <button class="btn btn-primary" onclick="goStep2()">Calcular Plan →</button>
   </div></div>
@@ -338,7 +338,7 @@ function renderHist(){
 function selectStage(i){selectedStage=i;document.querySelectorAll('.stage-btn').forEach((b,j)=>b.classList.toggle('selected',j===i));document.getElementById('targetPpm').value=STAGES[i].total;updatePrev()}
 function updatePrev(){
   const w=parseFloat(document.getElementById('waterPpm').value)||0,t=parseFloat(document.getElementById('targetPpm').value)||0,p=document.getElementById('previewBreakdown');
-  if(t>w&&(t-w)>=MG_FIXED){const rem=t-w-MG_FIXED;document.getElementById('prevMg').textContent=MG_FIXED+' PPM';document.getElementById('prevCa').textContent=r(rem*(2/3))+' PPM';document.getElementById('prevNpk').textContent=r(rem*(1/3))+' PPM';document.getElementById('prevTotal').textContent=r(t)+' PPM';p.style.display='block'}else p.style.display='none';
+  if(t>w&&(t-w)>=MG_FIXED){const rem=t-w-MG_FIXED;document.getElementById('prevMg').textContent=MG_FIXED+' PPM';document.getElementById('prevCa').textContent=r(rem/2)+' PPM';document.getElementById('prevNpk').textContent=r(rem/2)+' PPM';document.getElementById('prevTotal').textContent=r(t)+' PPM';p.style.display='block'}else p.style.display='none';
 }
 document.getElementById('waterPpm').addEventListener('input',updatePrev);
 document.getElementById('targetPpm').addEventListener('input',function(){selectedStage=-1;document.querySelectorAll('.stage-btn').forEach(b=>b.classList.remove('selected'));updatePrev()});
@@ -369,7 +369,7 @@ function goStep2(){
   const div=loadDiv();S.water=w;S.target=t;S.vol=v;S.scale=v/BASE_VOL;
   S.stageName=selectedStage>=0?STAGES[selectedStage].name:'Manual';
   S.divUsed={mg:div.mg,ca:div.ca,npk:div.npk};
-  S.mgPpm=MG_FIXED;const rem=t-w-MG_FIXED;S.caPpm=rem*(2/3);S.npkPpm=rem*(1/3);
+  S.mgPpm=MG_FIXED;const rem=t-w-MG_FIXED;S.caPpm=rem/2;S.npkPpm=rem/2;
   S.mgG=(S.mgPpm/div.mg)*S.scale;S.caG=(S.caPpm/div.ca)*S.scale;S.npkG=(S.npkPpm/div.npk)*S.scale;
   S.mgExp=w+S.mgPpm;S.mgTotalG=S.mgG;S.caTotalG=S.caG;S.npkTotalG=S.npkG;
 
@@ -531,7 +531,7 @@ function goStep5(){
   saveHist({date:dateStr,stage:S.stageName,vol:fmt(S.vol),target:r(S.target),final:r(S.npkActual),mg:saved.mg.toFixed(2),ca:saved.ca.toFixed(2),npk:saved.npk.toFixed(2),accuracy:acc.toFixed(1)});
 
   // Summary
-  document.getElementById('summaryMeta').innerHTML='<strong>'+S.stageName+'</strong> · '+fmt(S.vol)+' gal · Mg=70 fijo · Ca:NPK=2:1';
+  document.getElementById('summaryMeta').innerHTML='<strong>'+S.stageName+'</strong> · '+fmt(S.vol)+' gal · Mg=70 fijo · Ca:NPK=1:1';
 
   const realMg=S.mgActual-S.water,realCa=S.caActual-S.mgActual,realNpk=S.npkActual-S.caActual;
   const barMax=Math.max(S.target,S.npkActual);
